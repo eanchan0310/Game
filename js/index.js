@@ -30,7 +30,8 @@ var i=0;
 var FireList = [10];
 function create() 
 {
-    player = this.add.text(100, 200, '닭', { fontFamily: 'Arial', fontSize: 60, color: '#00ff00' }).setInteractive();
+    player = this.add.text(100, 200, '  ===\n+  !   =\n  ===\n =     ==\n ======', { fontFamily: 'Arial', fontSize: 20, color: '#00ff00' }).setInteractive();
+    // player = this.add.text(100, 200, '닭', { fontFamily: 'Arial', fontSize: 20, color: '#00ff00' }).setInteractive();
     player.setOrigin(0.5);
     this.input.setDraggable(player);
 
