@@ -1,7 +1,11 @@
 var config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    scale: {
+        width: 800,
+        height: 600,
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     parent: 'phaser-example',
     scene: {
         create: create,
