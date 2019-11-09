@@ -19,6 +19,8 @@ var config = {
     //     // + 내용
     // }, _tmpDelay)
 
+// 전역 변수 선언
+var delay = 10000;
 var game = new Phaser.Game(config);
 var player;
 var fire;
@@ -28,32 +30,25 @@ var cnt1 = 0;
 var bool = true;
 var i=0;
 var FireList = [10];
+// 전역 변수 선언 끝
+
+// create
 function create() 
-{
-    player = this.add.text(100, 200, '  ===\n+  !   =\n  ===\n =     ==\n ======', { fontFamily: 'Arial', fontSize: 20, color: '#00ff00' }).setInteractive();
-    // player = this.add.text(100, 200, '닭', { fontFamily: 'Arial', fontSize: 20, color: '#00ff00' }).setInteractive();
-    player.setOrigin(0.5);
-    this.input.setDraggable(player);
-
-    for(i=0; i<5; i++){
-        FireList[i] = this.add.text(0, Random_Int(500, 10), 'O', { fontFamily: 'Arial', fontSize: Random_Int(80, 30), color: 'red' });
-        FireList[i].setOrigin(0.5);
-        tween_LR.call(this, FireList[i]);
-    }
-    for(i=0; i<5; i++){
-        FireList[i+5] = this.add.text(Random_Int(700, 10), 0, 'O', { fontFamily: 'Arial', fontSize: Random_Int(80, 30), color: 'red' });
-        FireList[i+5].setOrigin(0.5);
-        tween_UD.call(this, FireList[i+5]);
-    }
-
+{    
+    // 변수 선언
     random = 0;
     var xdf = 0;
     var ydf = 0;
     var lx = 0;
     var ly = 0;
     var pointer1 = game.input.activePointer;
+    // 변수 선언 끝
 
-    
+    // 플레이어(닭) 설정
+    player = this.add.text(100, 200, '  ===\n+  !   =\n  ===\n =     ==\n ======', { fontFamily: 'Arial', fontSize: 20, color: '#00ff00' }).setInteractive();
+    player.setOrigin(0.5);
+    this.input.setDraggable(player);
+
     this.input.on('pointerdown', function (pointer, gameObject) {
         xdf = player.x - pointer.x;
         ydf = player.y - pointer.y;
@@ -81,6 +76,29 @@ function create()
 
         return _pointerY + ydf;
     }
+    // 플레이어(닭) 설정 끝
+    
+    //불꽃 설정
+    for(i=0; i<5; i++){
+        FireList[i] = this.add.text(0, Random_Int(500, 10), 'O', { fontFamily: 'Arial', fontSize: Random_Int(80, 30), color: 'red' });
+        FireList[i].setOrigin(0.5);
+    }
+    for(i=0; i<5; i++){
+        FireList[i+5] = this.add.text(Random_Int(700, 10), 0, 'O', { fontFamily: 'Arial', fontSize: Random_Int(80, 30), color: 'red' });
+        FireList[i+5].setOrigin(0.5);
+    }
+    setTimeout( () => {
+        for(i=0; i<5; i++){
+            tween_LR.call(this, FireList[i]);
+        }
+        for(i=5; i<10; i++){
+            tween_UD.call(this, FireList[i]);
+        }
+    }, delay)
+
+
+    
+    
 
     function tween_LR(target) {
         var tween1 = this.tweens.add({
@@ -118,24 +136,11 @@ function create()
             }
         });
     }
-    // var tween2 = this.tweens.add({
-    //     targets: fire,
-    //     y: 600, 
-    //     duration: 1000, 
-    //     ease: 'Linear',
-    //     yoyo: true,
-    //     repeat: -1,
-
-    //     onYoyo: function () { 
-    //         fire.x = Random_Int(799, 1)
-    //     },
-    //     onRepeat: function () { 
-    //         fire.x = Random_Int(799, 1)
-    //     }
-    // });
-    
+    //불꽃 설정 끝
 }
+// create 끝
 
+//랜덤 함수 선언
 function Random_Int(max, min) {
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -145,7 +150,9 @@ function Random_Int(max, min) {
 function Random_Double (max, min){
     return Math.random() * (max - min) + min;
 }
+//랜덤 함수 선언 끝
 
+// update
 function update()
 {
     if(player.x >= 770){
@@ -194,11 +201,13 @@ function update()
     // }
 
 }
+//update 끝
 
 
 
 
 
+//그 외 나머지 부속들
 function change() {
     random = Random_Int(4,1);
     switch(random){
