@@ -22,15 +22,24 @@ var random = 0;
 var conTU = 0;
 var cnt1 = 0;
 var bool = true;
-
+var i=0;
+var FireList = [10];
 function create() 
 {
     player = this.add.text(100, 200, '닭', { fontFamily: 'Arial', fontSize: 60, color: '#00ff00' }).setInteractive();
     player.setOrigin(0.5);
     this.input.setDraggable(player);
 
-    fire = this.add.text(900, 900, '불', { fontFamily: 'Arial', fontSize: 50, color: 'red' })
-    fire.setOrigin(0.5);
+    for(i=0; i<5; i++){
+        FireList[i] = this.add.text(0, Random_Int(500, 10), 'O', { fontFamily: 'Arial', fontSize: Random_Int(80, 30), color: 'red' });
+        FireList[i].setOrigin(0.5);
+        tween_LR.call(this, FireList[i]);
+    }
+    for(i=0; i<5; i++){
+        FireList[i+5] = this.add.text(Random_Int(700, 10), 0, 'O', { fontFamily: 'Arial', fontSize: Random_Int(80, 30), color: 'red' });
+        FireList[i+5].setOrigin(0.5);
+        tween_UD.call(this, FireList[i+5]);
+    }
 
     random = 0;
     var xdf = 0;
@@ -68,7 +77,57 @@ function create()
         return _pointerY + ydf;
     }
 
-    
+    function tween_LR(target) {
+        var tween1 = this.tweens.add({
+            targets: target,
+            x: 800, 
+            duration: Random_Int(5,1)*1000, 
+            ease: 'Linear',
+            yoyo: true,
+            onYoyo: function () { 
+                target.y = Random_Int(600, 0)
+                console.log('yoyo');
+            },
+            onComplete: () => { 
+                target.y = Random_Int(600, 0)
+                console.log('com')
+                tween_LR.call(this, target);
+            }
+        });
+    }
+    function tween_UD(target) {
+        var tween1 = this.tweens.add({
+            targets: target,
+            y: 600, 
+            duration: Random_Int(5,1)*1000, 
+            ease: 'Linear',
+            yoyo: true,
+            onYoyo: function () { 
+                target.x = Random_Int(800, 0)
+                console.log('yoyo');
+            },
+            onComplete: () => { 
+                target.x = Random_Int(800, 0)
+                console.log('com')
+                tween_UD.call(this, target);
+            }
+        });
+    }
+    // var tween2 = this.tweens.add({
+    //     targets: fire,
+    //     y: 600, 
+    //     duration: 1000, 
+    //     ease: 'Linear',
+    //     yoyo: true,
+    //     repeat: -1,
+
+    //     onYoyo: function () { 
+    //         fire.x = Random_Int(799, 1)
+    //     },
+    //     onRepeat: function () { 
+    //         fire.x = Random_Int(799, 1)
+    //     }
+    // });
     
 }
 
@@ -98,36 +157,36 @@ function update()
         player.y = 30;
     }
 
-    if(bool){
+    // if(bool){
 
-        change();
-        console.log("change");
-        bool = false;
-    }
-    else{
-        console.log(conTU);
-        if(fire.x >= 800 || fire.x <= 0 || fire.y <= 0 || fire.y >= 600){
-            bool = true;
-        }
-        else{
-            switch(conTU){
-                case 1: 
-                    Right_to_Left();
-                    break;
-                case 2:
-                    Left_to_Right();
-                    break;
-                case 3: 
-                    Up_to_Down();
-                    break;
-                case 4:
-                    Down_to_Up();
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
+    //     change();
+    //     console.log("change");
+    //     bool = false;
+    // }
+    // else{
+    //     console.log(conTU);
+    //     if(fire.x >= 800 || fire.x <= 0 || fire.y <= 0 || fire.y >= 600){
+    //         bool = true;
+    //     }
+    //     else{
+    //         switch(conTU){
+    //             case 1: 
+    //                 Right_to_Left();
+    //                 break;
+    //             case 2:
+    //                 Left_to_Right();
+    //                 break;
+    //             case 3: 
+    //                 Up_to_Down();
+    //                 break;
+    //             case 4:
+    //                 Down_to_Up();
+    //                 break;
+    //             default:
+    //                 break;
+    //         }
+    //     }
+    // }
 
 }
 
