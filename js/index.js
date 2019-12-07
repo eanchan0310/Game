@@ -39,7 +39,14 @@ var conTU = 0;
 var cnt1 = 0;
 var bool = true;
 var i=0;
-var FireList = [10];
+var FireList = [];
+var tweenN = [];
+var score = {};
+score.self = undefined;
+score.num = 0;
+score.gap = 1;
+score.toggle = false;
+score.best = 0;
 // 전역 변수 선언 끝
 
 function preload(){
@@ -60,72 +67,134 @@ function create()
     var pointer1 = game.input.activePointer;
     // 변수 선언 끝
 
-    player = this.physics.add.image(100, 200, 'chicken').setInteractive();
-    // player = this.physics.add.text(100, 200, '  ===\n+  !   =\n  ===\n =     ==\n ======', { fontFamily: 'Arial', fontSize: 20, color: '#00ff00' }).setInteractive();
-    player.setDisplaySize(30);
-    player.setOrigin(0.5);
-    this.input.setDraggable(player);
-    init_player(false);   
+    // background color
+    this.cameras.main.setBackgroundColor('#bbbbbb');
 
-    GameOver = this.add.text(400, 300, 'GameOver', { fontFamily: 'Arial', fontSize: 350, color: 'gray' });
+
+    score.self = this.add.text(400 , 40, 'BestScore: ' + score.best + '\nScore: ' + score.num, { color: 'black' });
+    score.self.setOrigin(0.5);
+
+    //생성
+    player = this.physics.add.image(400, 300, 'chicken')
+    // player = this.physics.add.text(100, 200, '  ===\n+  !   =\n  ===\n =     ==\n ======', { fontFamily: 'Arial', fontSize: 20, color: '#00ff00' }).setInteractive();
+    player.setDisplaySize(100, 100);
+    player.setOrigin(0.5);
+    
+    init_player(false);   
+    console.log('player:', player);
+    GameOver = this.add.text(400, 300, 'GameOver', { fontFamily: 'Arial', fontSize: 100, color: 'gray' });
+    GameOver.setOrigin(0.5);
     GameOver.setVisible(false);
 
     for(i=0; i<5; i++){
         FireList[i] = this.physics.add.image(0, Random_Int(500, 10), 'Fire');
         FireList[i].setOrigin(0.5);
-        FireList[i].setDisplaySize(50);
-    }
-    for(i=0; i<5; i++){
+        FireList[i].setDisplaySize(50, 50);
         FireList[i+5] = this.physics.add.image(Random_Int(700, 10), 0, 'Fire');
         // FireList[i+5] = this.physics.add.text(Random_Int(700, 10), 0, 'O', { fontFamily: 'Arial', fontSize: Random_Int(80, 30), color: 'red' });
         FireList[i+5].setOrigin(0.5);
-        FireList[i+5].setDisplaySize(50);
+        FireList[i+5].setDisplaySize(50, 50);
     }
-    init_Fire(false);
 
-    start = this.add.text(400, 480, 'start', { fontFamily: 'Arial', fontsize: 200, color: 'blue' });
+    console.log(FireList);
+
+    init_Fire(false);
+    console.log(player.y, FireList[3].y);
+
+    retry = this.add.text(400, 400, 'R e t r y', { fontFamily: 'Arial', fontsize: 45, color: 'White' });
+    retry.setOrigin(0.5);
+    retry.setVisible(false);
+    retry.setInteractive();
+
+
+    start = this.add.text(400, 480, 'press to start', { fontFamily: 'Arial', fontsize: 200, color: 'blue' });
     start.setInteractive();
 
-    start.on('pointerdown', (pointer) => {
+    this.input.once('pointerdown', (pointer) => {
+        console.log('once');
+        
         start.setVisible(false);
+        player.setInteractive();
+        this.input.setDraggable(player);
+        init_player(true);
         setTimeout( () => {
-            console.log(player.y, FireList[3].y);
-            init_player(true);
+            scoreToggleBoolean(true);
             init_Fire(true);
             for(i=0; i<5; i++){
-                tween_LR.call(this, FireList[i]);
+                tween_LR.call(this, FireList[i], i);
             }
             for(i=5; i<10; i++){
-                tween_UD.call(this, FireList[i]);
+                tween_UD.call(this, FireList[i], i);
             }
         }, delay)
     });
 
-    
- // 까지 생성
+    console.log(player);
+    //생성 끝
     
     for(var k=0; k<10; k++){
         var emp = FireList[k];
         this.physics.add.collider(emp, player, () => {
-            init_Fire(false);
-            // console.log(emp);
-
+            if(player.visible == true && FireList[1].visible == true){
+                init_Fire(false);
+                init_player(false);
+                GameOver.setVisible(true);
+                retry.setVisible(true);
+                scoreToggleBoolean(false);
+                for(var i=0; i<tweenN.length; i++){
+                    tweenN[i].remove();
+                }
+                for(var i=0; i<10; i++){
+                    if(i<5){
+                        FireList[i].x = 0;
+                        FireList[i].y = Random_Int(500, 10);
+                    }
+                    else{
+                        FireList[i].x = Random_Int(700, 10);
+                        FireList[i].y = 0;               //if문은 불을 초기 위치로 보낸다
+                    }
+                }
+            }
         })
     }
 
 
-    
+    retry.on('pointerdown', () => {
+        init_player(true);
+        GameOver.setVisible(false);
+        retry.setVisible(false);
+        setTimeout( () => {
+            score.self.setText('BestScore: ' + score.best + '\nScore: ' + score.num);
+            scoreToggleBoolean(true);
+            init_Fire(true);
+            console.log(tweenN);
+            for(i=0; i<tweenN.length; i++){
+                if(i<5){
+                    tween_LR.call(this, FireList[i], i);
+                }
+                else{
+                    tween_UD.call(this, FireList[i], i);
+                }
+            }
+        }, delay)
+
+    })
+
+    //터치 기능
     this.input.on('pointerdown', function (pointer, gameObject) {
-        xdf = player.x - pointer.x;
-        ydf = player.y - pointer.y;
+            xdf = player.x - pointer.x;
+            ydf = player.y - pointer.y;
     });
     
     
     this.input.on('pointermove', function (pointer) {
-        if (pointer.isDown) {
-            var stx = 0, sty = 0;
-            stx = distanceX(pointer.x);
-            sty = distanceY(pointer.y);
+        // console.log('when pointer move player y:', player.y)
+        if(player._visible == true){
+            if (pointer.isDown) {
+                var stx = 0, sty = 0;
+                stx = distanceX(pointer.x);
+                sty = distanceY(pointer.y);
+            }
         }
     });
     
@@ -142,76 +211,39 @@ function create()
 
         return _pointerY + ydf;
     }
+    //터치 기능 끝
     
-        
-    
-
-    
-    
-
-    
-    //불꽃 설정 끝
-}
-// create 끝
-
-function init_player(bool) {
-    player.setVisible(bool);
-    player.setActive(bool);  
-}
-function init_Fire(bool) {
-    for(var j=0; j<10; j++){
-        FireList[j].setVisible(bool);
-        FireList[j].setActive(bool);        
+    function scoreToggle(){
+        score.toggle = !score.toggle;
     }
-}
-function tween_LR(target) {
-    var tween1 = this.tweens.add({
-        targets: target,
-        x: 800, 
-        duration: Random_Int(5,1)*1000, 
-        ease: 'Linear',
-        yoyo: true,
-        onYoyo: function () { 
-            target.y = Random_Int(600, 0)
-            // console.log('yoyo');
-        },
-        onComplete: () => { 
-            target.y = Random_Int(600, 0)
-            // console.log('com')
-            tween_LR.call(this, target);
-        }
-    });
-}
-function tween_UD(target) {
-    var tween1 = this.tweens.add({
-        targets: target,
-        y: 600, 
-        duration: Random_Int(5,1)*1000, 
-        ease: 'Linear',
-        yoyo: true,
-        onYoyo: function () { 
-            target.x = Random_Int(800, 0)
-            // console.log('yoyo');
-        },
-        onComplete: () => { 
-            target.x = Random_Int(800, 0)
-            // console.log('com')
-            tween_UD.call(this, target);
-        }
-    });
-}
 
-//랜덤 함수 선언
-function Random_Int(max, min) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+    function scoreToggleBoolean(_bool) {
+        score.toggle = _bool;
+    }
+    // function remove_Tween(t_name){
+    //     var tween = this.tweens.addCounter({
+    //         from: 0,
+    //         to: 10,
+    //         duration: 1,
+    //         onUpdate: () => {
+    //             tween.remove();
+    //         }
 
-function Random_Double (max, min){
-    return Math.random() * (max - min) + min;
-}
-//랜덤 함수 선언 끝
+    //     })
+
+
+
+        // for(var i=0; i<5; i++){
+        //     FireList[i].x = 0;
+        //     FireList[i].y = Random_Int(500, 10);
+            
+        //     FireList[i+5].x = Random_Int(700, 10);
+        //     FireList[i+5].y = 0;
+        // }
+        // init_FireList();
+        // init_player(true);
+    }
+// create 끝
 
 // update
 function update()
@@ -229,6 +261,8 @@ function update()
     else if(player.y <= 30){
         player.y = 30;
     }
+
+    updateScore();
 
     // if(bool){
 
@@ -264,76 +298,161 @@ function update()
 }
 //update 끝
 
-
-
-
-
-//그 외 나머지 부속들
-function change() {
-    random = Random_Int(4,1);
-    switch(random){
-        case 1: 
-            Right_to_Left();
-            conTU = random;
-            break;
-        case 2:
-            Left_to_Right();
-            conTU = random;
-            break;
-        case 3: 
-            Up_to_Down();
-            conTU = random;
-            break;
-        case 4:
-            Down_to_Up();
-            conTU = random;
-            break;
-        default:
-            break;
+//이하는 함수 선언
+function updateScore() {
+    if (score.toggle) {
+        score.num += score.gap;
+        if(score.best < score.num){
+            score.best = score.num;
+        }
+        score.self.setText('BestScore: ' + score.best + '\nScore: ' + score.num);
     }
-    // console.log("random은 ",random);
-}
-
-function Right_to_Left(){
-    if(fire.x >= -30){
-        fire.x -= 10; 
-    }
-    else{
-        fire.x = 830;
-        fire.y = Random_Double(600, 0);
-        // console.log(fire.y);
+    else {
+        score.num = 0;
+        
     }
 }
 
-function Left_to_Right(){
-    if(fire.x <= 830){
-        fire.x += 10; 
+function init_player(bool) {
+    player.setVisible(bool);
+    player.setActive(bool);  
+    if(bool){
+        player.x = 400;
+        player.y = 300;
     }
-    else{
-        fire.x = -30;
-        fire.y = Random_Double(600, 0);
-        //console.log(fire.y);
+}
+function init_Fire(bool) {
+    for(var j=0; j<10; j++){
+        FireList[j].setVisible(bool);
+        FireList[j].setActive(bool);        
     }
+}
+function tween_LR(target, i) {
+        tweenN[i] = this.tweens.add({
+        targets: target,
+        x: 800, 
+        duration: Random_Double(5,1)*1000, 
+        ease: 'Linear',
+        yoyo: true,
+        onYoyo: function () { 
+            target.y = Random_Int(600, 0)
+            // console.log('yoyo');
+        },
+        onComplete: () => { 
+            target.y = Random_Int(600, 0)
+            // console.log('com')
+            if(player.visible == true){
+                tween_LR.call(this, target);
+            }
+        }
+    });
+}
+function tween_UD(target, i) {
+        tweenN[i] = this.tweens.add({
+        targets: target,
+        y: 600, 
+        duration: Random_Double(5, 1)*1000, 
+        ease: 'Linear',
+        yoyo: true,
+        repeat: 0,
+        onYoyo: function () { 
+            target.x = Random_Int(800, 0)
+            console.log('yoyo');
+        },
+        onComplete: () => { 
+            target.x = Random_Int(800, 0)
+            console.log('com')
+            if(player.visible == true){
+                tween_UD.call(this, target);
+            }
+        }
+    });
 }
 
-function Up_to_Down(){
-    if(fire.y <= 630){
-        fire.y += 10; 
-    }
-    else{
-        fire.y = -30;
-        fire.x = Random_Double(800, 0);
-        //console.log(fire.x);
-    }
+//랜덤 함수 선언
+function Random_Int(max, min) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function Down_to_Up(){
-    if(fire.y >= -30){
-        fire.y -= 10; 
-    }
-    else{
-        fire.y = 630;
-        fire.x = Random_Double(800, 0);
-        //console.log(fire.x);
-    }
+function Random_Double (max, min){
+    return Math.random() * (max - min) + min;
 }
+//랜덤 함수 선언 끝
+
+
+
+
+
+
+
+// //그 외 나머지 부속들
+// function change() {
+//     random = Random_Int(4,1);
+//     switch(random){
+//         case 1: 
+//             Right_to_Left();
+//             conTU = random;
+//             break;
+//         case 2:
+//             Left_to_Right();
+//             conTU = random;
+//             break;
+//         case 3: 
+//             Up_to_Down();
+//             conTU = random;
+//             break;
+//         case 4:
+//             Down_to_Up();
+//             conTU = random;
+//             break;
+//         default:
+//             break;
+//     }
+//     // console.log("random은 ",random);
+// }
+
+// function Right_to_Left(){
+//     if(fire.x >= -30){
+//         fire.x -= 10; 
+//     }
+//     else{
+//         fire.x = 830;
+//         fire.y = Random_Double(600, 0);
+//         // console.log(fire.y);
+//     }
+// }
+
+// function Left_to_Right(){
+//     if(fire.x <= 830){
+//         fire.x += 10; 
+//     }
+//     else{
+//         fire.x = -30;
+//         fire.y = Random_Double(600, 0);
+//         //console.log(fire.y);
+//     }
+// }
+
+// function Up_to_Down(){
+//     if(fire.y <= 630){
+//         fire.y += 10; 
+//     }
+//     else{
+//         fire.y = -30;
+//         fire.x = Random_Double(800, 0);
+//         //console.log(fire.x);
+//     }
+// }
+
+// function Down_to_Up(){
+//     if(fire.y >= -30){
+//         fire.y -= 10; 
+//     }
+//     else{
+//         fire.y = 630;
+//         fire.x = Random_Double(800, 0);
+//         //console.log(fire.x);
+//     }
+// }
