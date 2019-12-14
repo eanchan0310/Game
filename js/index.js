@@ -42,16 +42,21 @@ var i=0;
 var FireList = [];
 var tweenN = [];
 var score = {};
+var retry_on;
 score.self = undefined;
 score.num = 0;
 score.gap = 1;
 score.toggle = false;
 score.best = 0;
+var retry_picture;
+var background_1;
 // 전역 변수 선언 끝
 
 function preload(){
-    this.load.image('Fire', './assets/image/Fire_1.jpg');
-    this.load.image('chicken', './assets/image/chicken_1.jpg');
+    this.load.image('Fire', './assets/image/Fire_1.png');
+    this.load.image('chicken', './assets/image/chicken_2.png');
+    this.load.image('background', './assets/image/background_1.jpg');
+    this.load.image('retry_picture', './assets/image/retry_picture.png');
 
 
 }
@@ -70,30 +75,41 @@ function create()
     // background color
     this.cameras.main.setBackgroundColor('#bbbbbb');
 
+    background_1 = this.add.image(0, 0, 'background');
+    background_1.setDisplaySize(800, 600)
+    background_1.setOrigin(0)
+    retry_picture = this.add.image(0, 0, 'retry_picture');
+    retry_picture.setInteractive();
+    init_retry_picture(false);
+    retry_picture.setAlpha(0.05);
+    retry_picture.setDisplaySize(800, 600)
+    retry_picture.setOrigin(0);
 
-    score.self = this.add.text(400 , 40, 'BestScore: ' + score.best + '\nScore: ' + score.num, { color: 'black' });
+    score.self = this.add.text(400 , 40, 'BestScore: ' + score.best + '\nScore: ' + score.num, { fontFamily: 'Arial', fontSize: 30, color: 'gray' });
+    score.self.setStroke('#000000', 5);
     score.self.setOrigin(0.5);
 
     //생성
     player = this.physics.add.image(400, 300, 'chicken')
     // player = this.physics.add.text(100, 200, '  ===\n+  !   =\n  ===\n =     ==\n ======', { fontFamily: 'Arial', fontSize: 20, color: '#00ff00' }).setInteractive();
     player.setDisplaySize(100, 100);
-    player.setOrigin(0.5);
-    
-    init_player(false);   
+    player.setCircle(350, player.width/2 - 350, player.height/2 - 400);
+    init_player(false);
     console.log('player:', player);
-    GameOver = this.add.text(400, 300, 'GameOver', { fontFamily: 'Arial', fontSize: 100, color: 'gray' });
+
+    GameOver = this.add.text(400, 300, 'GameOver', { fontFamily: 'Arial', fontSize: 100, color: 'black' });
     GameOver.setOrigin(0.5);
     GameOver.setVisible(false);
 
     for(i=0; i<5; i++){
         FireList[i] = this.physics.add.image(0, Random_Int(500, 10), 'Fire');
-        FireList[i].setOrigin(0.5);
-        FireList[i].setDisplaySize(50, 50);
+        FireList[i].setDisplaySize(100, 100);
+        FireList[i].setCircle(120, FireList[i].width/2 - 90, FireList[i].height/2 - 120)
+
         FireList[i+5] = this.physics.add.image(Random_Int(700, 10), 0, 'Fire');
         // FireList[i+5] = this.physics.add.text(Random_Int(700, 10), 0, 'O', { fontFamily: 'Arial', fontSize: Random_Int(80, 30), color: 'red' });
-        FireList[i+5].setOrigin(0.5);
-        FireList[i+5].setDisplaySize(50, 50);
+        FireList[i+5].setDisplaySize(100, 100);
+        FireList[i+5].setCircle(120, FireList[i+5].width/2 - 90, FireList[i+5].height/2 - 120)
     }
 
     console.log(FireList);
@@ -101,14 +117,15 @@ function create()
     init_Fire(false);
     console.log(player.y, FireList[3].y);
 
-    retry = this.add.text(400, 400, 'R e t r y', { fontFamily: 'Arial', fontsize: 45, color: 'White' });
+    retry = this.add.text(400, 400, 'R e t r y', { fontFamily: 'Arial', fonSize: 20, color: 'White' });
     retry.setOrigin(0.5);
     retry.setVisible(false);
     retry.setInteractive();
 
 
-    start = this.add.text(400, 480, 'press to start', { fontFamily: 'Arial', fontsize: 200, color: 'blue' });
+    start = this.add.text(400, 480, 'press to start', { fontFamily: 'Arial', fontSize: 40, color: 'blue' });
     start.setInteractive();
+    start.setOrigin(0.5);
 
     this.input.once('pointerdown', (pointer) => {
         console.log('once');
@@ -136,14 +153,15 @@ function create()
         var emp = FireList[k];
         this.physics.add.collider(emp, player, () => {
             if(player.visible == true && FireList[1].visible == true){
+                init_retry_picture(true);
                 init_Fire(false);
                 init_player(false);
                 GameOver.setVisible(true);
                 retry.setVisible(true);
                 scoreToggleBoolean(false);
-                for(var i=0; i<tweenN.length; i++){
-                    tweenN[i].remove();
-                }
+                // for(var i=0; i<tweenN.length; i++){
+                //     tweenN[i].remove();
+                // }
                 for(var i=0; i<10; i++){
                     if(i<5){
                         FireList[i].x = 0;
@@ -158,26 +176,13 @@ function create()
         })
     }
 
-
+    
     retry.on('pointerdown', () => {
-        init_player(true);
-        GameOver.setVisible(false);
-        retry.setVisible(false);
-        setTimeout( () => {
-            score.self.setText('BestScore: ' + score.best + '\nScore: ' + score.num);
-            scoreToggleBoolean(true);
-            init_Fire(true);
-            console.log(tweenN);
-            for(i=0; i<tweenN.length; i++){
-                if(i<5){
-                    tween_LR.call(this, FireList[i], i);
-                }
-                else{
-                    tween_UD.call(this, FireList[i], i);
-                }
-            }
-        }, delay)
+        when_retry.call(this);
+    })
 
+    retry_picture.on('pointerdown', () => {
+        when_retry.call(this);
     })
 
     //터치 기능
@@ -299,6 +304,35 @@ function update()
 //update 끝
 
 //이하는 함수 선언
+function when_retry() {
+    init_retry_picture(false);
+    init_player(true);
+    GameOver.setVisible(false);
+    retry.setVisible(false);
+    setTimeout( () => {
+        score.self.setText('BestScore: ' + score.best + '\nScore: ' + score.num);
+        scoreToggleBoolean(true);
+        init_Fire(true);
+        console.log(tweenN);
+        for(i=0; i<tweenN.length; i++){
+            if(i<5){
+                tween_LR.call(this, FireList[i], i);
+            }
+            else{
+                tween_UD.call(this, FireList[i], i);
+            }
+        }
+    }, delay)
+}
+
+function scoreToggle(){
+    score.toggle = !score.toggle;
+}
+
+function scoreToggleBoolean(_bool) {
+    score.toggle = _bool;
+}
+
 function updateScore() {
     if (score.toggle) {
         score.num += score.gap;
@@ -313,6 +347,10 @@ function updateScore() {
     }
 }
 
+function init_retry_picture(bool) {
+    retry_picture.setVisible(bool);
+    retry_picture.setActive(bool); 
+}
 function init_player(bool) {
     player.setVisible(bool);
     player.setActive(bool);  
@@ -338,11 +376,19 @@ function tween_LR(target, i) {
             target.y = Random_Int(600, 0)
             // console.log('yoyo');
         },
+        onUpdate: () => {
+            if(player.visible == false){
+                console.log('remove', i)
+                tweenN[i].remove();
+                target.x = 0
+                target.y = Random_Int(600, 0);
+            }
+        },
         onComplete: () => { 
-            target.y = Random_Int(600, 0)
-            // console.log('com')
+            
             if(player.visible == true){
-                tween_LR.call(this, target);
+                target.y = Random_Int(600, 0);
+                tween_LR.call(this, target, i);
             }
         }
     });
@@ -356,14 +402,20 @@ function tween_UD(target, i) {
         yoyo: true,
         repeat: 0,
         onYoyo: function () { 
-            target.x = Random_Int(800, 0)
-            console.log('yoyo');
+            target.x = Random_Int(800, 0);
+        },
+        onUpdate: () => {
+            if(player.visible == false){
+                console.log('remove', i)
+                tweenN[i].remove();
+                target.x = Random_Int(800, 0);
+                target.y = 0;
+            }
         },
         onComplete: () => { 
-            target.x = Random_Int(800, 0)
-            console.log('com')
             if(player.visible == true){
-                tween_UD.call(this, target);
+                target.x = Random_Int(800, 0);
+                tween_UD.call(this, target, i);
             }
         }
     });
