@@ -39,8 +39,8 @@ var retry_picture;
 var background_1;
 var start;
 
-var i=0;
-var bool = true;
+// var i=0;
+// var bool = true;
 var random = 0;
 var delay = 3000;
 
@@ -62,16 +62,15 @@ class levelManager {
         tmpO.twDur = _twDur;
         return tmpO;
     }
-    
+    setSelf(_num) {
+        this.self = _num;
+    }
     setDur() {
         this.level[0].twDur = Random_Double(7, 3)*1000;
         this.level[1].twDur = Random_Double(5, 1)*1000;
         this.level[2].twDur = Random_Double(5, 1)*1000;
     }
     getDur() {
-        console.log(this.self);
-        console.log(this.level);
-        console.log(this.level[this.self]);
         return this.level[this.self].twDur;
     }
     change_get_Dur() {
@@ -189,7 +188,7 @@ function create()
     dead_chicken.setDisplaySize(70, 56);
     dead_chicken.setVisible(false);
 
-    for(i=0; i<5; i++){
+    for(var i=0; i<5; i++){
         FireList[i] = this.physics.add.image(0, Random_Int(500, 10), 'Fire');
         FireList[i].setDisplaySize(60, 73);
         FireList[i].setCircle(28, FireList[i].width/2 - 25, FireList[i].height/2 - 28);
@@ -249,7 +248,7 @@ function create()
                 init_player(false);
                 GameOver.setVisible(true);
                 retry.setVisible(true);
-                scoreToggleBoolean(false);
+                dead_chicken.setVisible(true);
                 for(var i=0; i<10; i++){
                     if(i<5){
                         FireList[i].x = 0;
@@ -362,14 +361,13 @@ function switch_case_1(){
     levelTexture[0].setVisible(true);
     scoreToggleBoolean(false);
     setTimeout( () => {
-        for(i=0; i<2; i++){
+        for(var i=0; i<2; i++){
             tween_LR.call(this, FireList[i], i, tmpLM.level[0].twDur);
             tmpLM.setDur();
             FireList[i].setVisible(true);
             FireList[i].setActive(true);
         }
-        for(i=7; i<10; i++){
-            console.log(FireList[i])
+        for(var i=7; i<10; i++){
             tween_UD.call(this, FireList[i], i, tmpLM.level[0].twDur);
             tmpLM.setDur()
             FireList[i].setVisible(true);
@@ -378,8 +376,7 @@ function switch_case_1(){
     }, delay)
     setTimeout( () => {
         if(is_player_alive()){
-            console.log(tmpLM.self);
-            tmpLM.self++;
+            tmpLM.setSelf(1);
             levelTexture[0].setVisible(false);
             switch_case_2.call(this);
         }
@@ -390,48 +387,33 @@ function is_player_alive(){
     return player.visible;
 }
 function switch_case_2(){
-    init_player(false);
-    init_player(true);
     levelTexture[1].setVisible(true);
-    setTimeout( () => {
-        for(i=0; i<5; i++){
-            tween_LR.call(this, FireList[i], i, tmpLM.level[1].twDur);
-            tmpLM.setDur()
-            FireList[i].setVisible(true);
-            FireList[i].setActive(true);
-        }
-        for(i=5; i<10; i++){
-            tween_UD.call(this, FireList[i], i, tmpLM.level[1].twDur);
-            tmpLM.setDur()
-            FireList[i].setVisible(true);
-            FireList[i].setActive(true);
-        }
-        levelTexture[1].setVisible(true);
-    }, delay)
 
     setTimeout( () => {
         if(is_player_alive()){
-            tmpLM.self++;
+            tmpLM.setSelf(2);
             levelTexture[1].setVisible(false);
             switch_case_3.call(this);
         }  
     }, 20000)
 }
 function switch_case_3(){
-    init_player(false)
-    init_player(true);
     scoreToggleBoolean(true);
+    for(var i=2; i<5; i++){
+        tween_LR.call(this, FireList[i], i, tmpLM.level[1].twDur);
+        tmpLM.setDur()
+        FireList[i].setVisible(true);
+        FireList[i].setActive(true);
+    }
+    for(var i=5; i<7; i++){
+        tween_UD.call(this, FireList[i], i, tmpLM.level[1].twDur);
+        tmpLM.setDur()
+        FireList[i].setVisible(true);
+        FireList[i].setActive(true);
+    }
     setTimeout( () => {
-        init_Fire(true);
-        for(i=0; i<5; i++){
-            tween_LR.call(this, FireList[i], i, tmpLM.level[2].twDur);
-            FireList[i].setVisible(true);
-            FireList[i].setActive(true);
-        }
-        for(i=5; i<10; i++){
-            tween_UD.call(this, FireList[i], i, tmpLM.level[2].twDur);
-            FireList[i].setVisible(true);
-            FireList[i].setActive(true);
+        if(is_player_alive()){
+            init_Fire(true);
         }
     }, delay)
 }
@@ -472,7 +454,6 @@ function distanceY(_pointerY) {
 // <Press to start 첫 시작 이벤트>
 function start () {
     this.input.once('pointerdown', (pointer) => {
-        console.log('once');
         
         start.setVisible(false);
         player.setInteractive();
@@ -481,10 +462,10 @@ function start () {
         setTimeout( () => {
             scoreToggleBoolean(true);
             init_Fire(true);
-            for(i=0; i<5; i++){
+            for(var i=0; i<5; i++){
                 tween_LR.call(this, FireList[i], i);
             }
-            for(i=5; i<10; i++){
+            for(var i=5; i<10; i++){
                 tween_UD.call(this, FireList[i], i);
             }
         }, delay)
@@ -500,7 +481,7 @@ function when_retry() {
     GameOver.setVisible(false);
     tmpLM.self = 0;
     retry.setVisible(false);
-    dead_chicken.setVisible()
+    dead_chicken.setVisible(false);
 
     // switch (tmpLM.self) {
     //     case 0:
@@ -509,7 +490,7 @@ function when_retry() {
     //         break;
     //     case 1:
     //         switch_case_2.call(this)
-
+    
     //         break;
     //     case 2:
     //         switch_case_3.call(this)
@@ -526,9 +507,11 @@ function when_retry() {
 
 // <update 기능>
 function updateScore() {
+    score.self.setVisible(score.toggle);
     if (score.toggle) {
-        score.self.setVisible(score.toggle);
-        score.num += score.gap;
+        if(is_player_alive()){
+            score.num += score.gap;
+        }
         if(score.best < score.num){
             score.best = score.num;
         }
@@ -536,7 +519,7 @@ function updateScore() {
     }
     else {
         score.num = 0;
-        
+        score.self.setText('BestScore: ' + score.best + '\nScore: ' + score.num);
     }
 }
 
@@ -554,22 +537,22 @@ function updateScore() {
 // <!update 기능>
 
 // <init 기능>
-function init_retry_picture(bool) {
-    retry_picture.setVisible(bool);
-    retry_picture.setActive(bool); 
+function init_retry_picture(_bool) {
+    retry_picture.setVisible(_bool);
+    retry_picture.setActive(_bool); 
 }
-function init_player(bool) {
-    player.setVisible(bool);
-    player.setActive(bool);  
-    if(bool){
+function init_player(_bool) {
+    player.setVisible(_bool);
+    player.setActive(_bool);  
+    if(_bool){
         player.x = 400;
         player.y = 300;
     }
 }
-function init_Fire(bool) {
+function init_Fire(_bool) {
     for(var j=0; j<10; j++){
-        FireList[j].setVisible(bool);
-        FireList[j].setActive(bool);        
+        FireList[j].setVisible(_bool);
+        FireList[j].setActive(_bool);        
     }
 }
 // <!init 기능>
@@ -585,20 +568,19 @@ function tween_LR(target, i, _duration) {
         onYoyo: function () { 
             target.y = Random_Int(600, 0)
         },
-        onUpdate: () => {
-            if(player.visible == false){
-                console.log('remove', i)
-                tweenN[i].remove();
+        onUpdate: function () {
+            if(!is_player_alive()){
                 target.x = 0
                 target.y = Random_Int(600, 0);
                 if(i == 9){
                     retry_on = true;
                 }
+                this.remove();
             }
         },
         onComplete: () => { 
             
-            if(player.visible == true){
+            if(is_player_alive()){
                 target.y = Random_Int(600, 0);
                 tween_LR.call(this, target, i, tmpLM.change_get_Dur()); // tween Dur 을 바꿔서 전달
             }
@@ -613,25 +595,21 @@ function tween_UD(target, i, _duration) {
         ease: 'Linear',
         yoyo: true,
         repeat: 0,
-        onYoyo: function () { 
-            console.log("mm")
+        onYoyo: function () {
             target.x = Random_Int(800, 0);
         },
-        onUpdate: () => {
-            console.log()
-            if(player.visible == false){
-                console.log('remove', i)
-                tweenN[i].remove();
+        onUpdate: function () {
+            if(!is_player_alive()){
                 target.x = Random_Int(800, 0);
                 target.y = 0;
                 if(i == 9){
                     retry_on = true;
                 }
+                this.remove();
             }
         },
         onComplete: () => { 
-            console.log("a")
-            if(player.visible == true){
+            if(is_player_alive()){
                 target.x = Random_Int(800, 0);
                 tween_UD.call(this, target, i, tmpLM.change_get_Dur());
             }
@@ -700,7 +678,6 @@ class LM {
                     this.updateChckStatus_2();
                 break;
                 default:
-                    console.log('this.stageStr:', this.stageStr);
                 break;
             }
         }
