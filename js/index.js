@@ -47,7 +47,7 @@ var delay = 3000;
 class levelManager {
     constructor() {
         this.level = [];
-        this.self = 3;
+        this.self = 0;
         this.initLevel();
     }
 
@@ -64,16 +64,19 @@ class levelManager {
     }
     
     setDur() {
-        this.level[0].twDur = Random_Double(7, 3)*1000
-        this.level[1].twDur = Random_Double(5, 1)*1000
-        this.level[2].twDur = Random_Double(5, 1)*1000
+        this.level[0].twDur = Random_Double(7, 3)*1000;
+        this.level[1].twDur = Random_Double(5, 1)*1000;
+        this.level[2].twDur = Random_Double(5, 1)*1000;
     }
     getDur() {
+        console.log(this.self);
+        console.log(this.level);
+        console.log(this.level[this.self]);
         return this.level[this.self].twDur;
     }
     change_get_Dur() {
-        this.setDur.call(this)
-        return this.getDur.call(this)
+        this.setDur.call(this);
+        return this.getDur.call(this);
     }
 
     // getLevel(_idx) {
@@ -122,7 +125,7 @@ var test_music = undefined;
 function preload(){
     this.load.image('Fire', './assets/image/jin_fire_1.png');
     this.load.image('chicken', './assets/image/jin_chicken_s.png');
-    this.load.image('deadChicken', './assets/image/jin_deadChicken.png')
+    this.load.image('deadChicken', './assets/image/jin_deadChicken.png');
     this.load.image('background', './assets/image/jin_Grill_1.png');
     this.load.image('retry_picture', './assets/image/retry_picture.png');
 
@@ -156,7 +159,7 @@ function create()
     retry_picture.setInteractive();
     init_retry_picture(false);
     retry_picture.setAlpha(0.01);
-    retry_picture.setDisplaySize(800, 600)
+    retry_picture.setDisplaySize(800, 600);
     retry_picture.setOrigin(0);
 
     score.self = this.add.text(400 , 40, 'BestScore: ' + score.best + '\nScore: ' + score.num, { fontFamily: 'Arial', fontSize: 30, color: 'gray' });
@@ -169,11 +172,11 @@ function create()
     // timer.self.setOrigin(0.5);
     // timer.self.setVisible(false);
     
-    levelTexture[0] = this.add.text(400, 40, 'Level' + 1, { fontFamily: 'Arial', fontSize: 30, color: 'gray' });
+    levelTexture[0] = this.add.text(400, 60, 'Level' + 1, { fontFamily: 'Arial', fontSize: 60, color: 'rgb(40, 212, 224)' });
     levelTexture[0].setVisible(false);
     levelTexture[0].setStroke('#000000', 5);
     levelTexture[0].setOrigin(0.5);
-    levelTexture[1] = this.add.text(400, 40, 'Level' + 2, { fontFamily: 'Arial', fontSize: 30, color: 'gray' });
+    levelTexture[1] = this.add.text(400, 60, 'Level' + 2, { fontFamily: 'Arial', fontSize: 60, color: 'rgb(40, 212, 224)' });
     levelTexture[1].setVisible(false);
     levelTexture[1].setStroke('#000000', 5);
     levelTexture[1].setOrigin(0.5);
@@ -182,14 +185,14 @@ function create()
     player.setCircle(70, player.width/2 - 60, player.height/2 - 40);
     init_player(false);
 
-    dead_chicken = this.physics.add.image(400, 450, 'deadChicken');
-    dead_chicken.setDisplaySize(70, 56)
-    dead_chicken.setVisible(false)
+    dead_chicken = this.add.image(400, 450, 'deadChicken');
+    dead_chicken.setDisplaySize(70, 56);
+    dead_chicken.setVisible(false);
 
     for(i=0; i<5; i++){
         FireList[i] = this.physics.add.image(0, Random_Int(500, 10), 'Fire');
         FireList[i].setDisplaySize(60, 73);
-        FireList[i].setCircle(28, FireList[i].width/2 - 25, FireList[i].height/2 - 28)
+        FireList[i].setCircle(28, FireList[i].width/2 - 25, FireList[i].height/2 - 28);
 
         FireList[i+5] = this.physics.add.image(Random_Int(700, 10), 0, 'Fire');
         FireList[i+5].setDisplaySize(60, 73);
@@ -202,28 +205,36 @@ function create()
     GameOver.setVisible(false);
     // <!background, start, retry, score, timer, player, Fire, Gameover 생성>
 
-    // <Level나눅이>
+    // <Level나눅이>__________________________________________
     this.input.once('pointerdown', (pointer) => {
         console.log('once');
         test_music.play();
-        switch (tmpLM.self) {
-            case 1:
-                switch_case_1.call(this)
+        // switch (tmpLM.self) {
+        //     case 0:
+        //         switch_case_1.call(this)
 
-            case 2:
-                switch_case_2.call(this)
+        //     case 1:
+        //         switch_case_2.call(this)
 
-            case 3:
-                switch_case_3.call(this)
+        //     case 2:
+        //         switch_case_3.call(this)
 
-                break;
-            default:
-                console.log(tmpLM.self)
+        //         break;
+        //     default:
+        //         console.log(tmpLM.self)
 
-                break;
-        }
+        //         break;
+        // }
+        switch_case_1.call(this);
     });
-    // <!level나눅이>
+    // <!level나눅이>__________________________________________
+
+
+
+
+
+
+
 
     // <collide 충돌 시 이벤트>
     for(var k=0; k<10; k++){
@@ -349,11 +360,11 @@ function switch_case_1(){
     player.setInteractive();
     this.input.setDraggable(player);
     levelTexture[0].setVisible(true);
+    scoreToggleBoolean(false);
     setTimeout( () => {
-        scoreToggleBoolean(false);
         for(i=0; i<2; i++){
             tween_LR.call(this, FireList[i], i, tmpLM.level[0].twDur);
-            tmpLM.setDur()
+            tmpLM.setDur();
             FireList[i].setVisible(true);
             FireList[i].setActive(true);
         }
@@ -366,10 +377,17 @@ function switch_case_1(){
         }
     }, delay)
     setTimeout( () => {
-        console.log(tmpLM.self)
-        tmpLM.self = 2
-        levelTexture[0].setVisible(false);
-    }, 20000)
+        if(is_player_alive()){
+            console.log(tmpLM.self);
+            tmpLM.self++;
+            levelTexture[0].setVisible(false);
+            switch_case_2.call(this);
+        }
+        
+    }, 10000)
+}
+function is_player_alive(){
+    return player.visible;
 }
 function switch_case_2(){
     init_player(false);
@@ -392,9 +410,12 @@ function switch_case_2(){
     }, delay)
 
     setTimeout( () => {
-        tmpLM.self = 3
-        levelTexture[1].setVisible(false);
-    }, 30000)
+        if(is_player_alive()){
+            tmpLM.self++;
+            levelTexture[1].setVisible(false);
+            switch_case_3.call(this);
+        }  
+    }, 20000)
 }
 function switch_case_3(){
     init_player(false)
@@ -477,26 +498,29 @@ function when_retry() {
     init_retry_picture(false);
     init_player(true);
     GameOver.setVisible(false);
-    tmpLM.self = 1;
+    tmpLM.self = 0;
     retry.setVisible(false);
+    dead_chicken.setVisible()
 
-    switch (tmpLM.self) {
-        case 1:
-            switch_case_1.call(this)
+    // switch (tmpLM.self) {
+    //     case 0:
+    //         switch_case_1.call(this)
 
-            break;
-        case 2:
-            switch_case_2.call(this)
+    //         break;
+    //     case 1:
+    //         switch_case_2.call(this)
 
-        case 3:
-            switch_case_3.call(this)
+    //         break;
+    //     case 2:
+    //         switch_case_3.call(this)
 
-            break;
-        default:
-            console.log(tmpLM.self)
+    //         break;
+    //     default:
+    //         console.log(tmpLM.self)
 
-            break;
-    }
+    //         break;
+    // }
+    switch_case_1.call(this);
 }
 // <!retry 기능>
 
@@ -680,7 +704,7 @@ class LM {
                 break;
             }
         }
-    }
+    } 
     updateChckStatus_0() {
         // 만약에 stage 1에서 15초가 넘었으면 (조건문)
         //      조건문 안에서 this.stageStr++;
