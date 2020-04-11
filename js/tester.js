@@ -33,6 +33,7 @@ var player;
 var dead_chicken;
 var FireList = [];
 var tweenN = [];
+var rankBlock = undefined;
 
 var retry_on = false;
 var retry_picture;
@@ -72,7 +73,8 @@ score.self = undefined;
 score.num = 0;
 score.gap = 1;
 score.toggle = false;
-score.best = 0;
+score.best = [0, 0, 0];
+score.bestTxt = [];
 
 var timer = {};
 timer.num = 500;
@@ -118,6 +120,7 @@ function preload(){
 // <create>
 function create() 
 {    
+
     // <background, start, retry, score, player, Fire, Gameover 생성>
     test_music = this.sound.add('theme'); 
 
@@ -127,7 +130,18 @@ function create()
     background_1.setDisplaySize(800, 600);
     background_1.setOrigin(0);
 
+    rankBlock = this.add.graphics();
 
+    var rb_thickness = 4;
+    var rb_color = 0x000000;
+    var rb_alpha = 1
+
+    rankBlock.lineStyle(rb_thickness, rb_color, rb_alpha);
+    rankBlock.fillStyle(0xFFFFFF, 1);
+    rankBlock.fillRect(220, 80, 360, 280);
+    rankBlock.strokeRect(220, 80, 360, 280);
+    rankBlock.setVisible(false);
+    rankBlock.setAlpha(0.7);
 
     start = this.add.text(400, 480, 'press to start', { fontFamily: 'Arial', fontSize: 40, color: 'blue' });
     start.setInteractive();
@@ -144,10 +158,17 @@ function create()
     retry_picture.setDisplaySize(800, 600)
     retry_picture.setOrigin(0);
 
-    score.self = this.add.text(400 , 40, 'BestScore: ' + score.best + '\nScore: ' + score.num, { fontFamily: 'Arial', fontSize: 30, color: 'gray' });
+    score.self = this.add.text(400 , 60, 'Score: ' + score.num, { fontFamily: 'Arial', fontSize: 50, color: 'white' });
     score.self.setStroke('#000000', 5);
     score.self.setOrigin(0.5);
     
+    score.bestTxt[0] = this.add.text(240 , 105, 'RANK 1            '   + score.best[0], { fontFamily: 'Arial', fontSize: 40, color: 'gold' });
+    score.bestTxt[1] = this.add.text(240 , 155, 'RANK 2            '   + score.best[1], { fontFamily: 'Arial', fontSize: 40, color: 'silver' });
+    score.bestTxt[2] = this.add.text(240 , 205, 'RANK 3            '   + score.best[2], { fontFamily: 'Arial', fontSize: 40, color: 'brown' });
+    score.bestTxt[0].setStroke('#000000', 3);
+    score.bestTxt[1].setStroke('#000000', 3);
+    score.bestTxt[2].setStroke('#000000', 3);
+
     // timer.self = this.add.text(400 , 40, 'Time: ' + timer.num, { fontFamily: 'Arial', fontSize: 30, color: 'gray' });
     // timer.self.setStroke('#000000', 5);
     // timer.self.setOrigin(0.5);
@@ -164,7 +185,7 @@ function create()
     player.setCircle(70, player.width/2 - 60, player.height/2 - 40);
     init_player(false);
 
-    dead_chicken = this.physics.add.image(400, 450, 'deadChicken');
+    dead_chicken = this.physics.add.image(400, 480, 'deadChicken');
     dead_chicken.setDisplaySize(70, 56)
     dead_chicken.setVisible(false)
 
@@ -291,10 +312,26 @@ function create()
                 init_player(false);
                 init_Fire(false);
                 init_retry_picture(true);
-                GameOver.setVisible(true);
+                // GameOver.setVisible(true);
                 retry.setVisible(true);
                 scoreToggleBoolean(false);
                 dead_chicken.setVisible(true);
+                score.self.setVisible(false);
+                rankBlock.setVisible(true);
+
+                if(score.best[0] < score.num){
+                    score.best[0] = score.num;
+                    score.bestTxt[0].setText('RANK 1            '   + score.best[0]);
+                }
+                else if(score.best[1] < score.num){
+                    score.best[1] = score.num;
+                    score.bestTxt[1].setText('RANK 2            '   + score.best[1]);
+                }
+                else if(score.best[2] < score.num){
+                    score.best[2] = score.num;
+                    score.bestTxt[2].setText('RANK 3            '   + score.best[2]);
+                }
+
                 for(var i=0; i<10; i++){
                     if(i<5){
                         FireList[i].x = 0;
@@ -334,6 +371,15 @@ function create()
             }
         }
     });
+
+    PhaserGUIAction(
+		this,
+		{
+			alpha: 0.6, // 0.0 ~ 1.0 (any value, you can change it in GUI)
+			// right: 100, // any value
+			// top: 50 // any value
+		}
+	);
 }
 // <!create>
 
@@ -456,12 +502,14 @@ function start () {
  
 // <retry 기능>
 function when_retry() {
+    rankBlock.setVisible(false);
     test_music.play();
     init_retry_picture(false);
     init_player(true);
     dead_chicken.setVisible(false);
     GameOver.setVisible(false);
     retry.setVisible(false);
+    score.self.setVisible(true)
     setTimeout( () => {
         score.self.setText('BestScore: ' + score.best + '\nScore: ' + score.num);
         scoreToggleBoolean(true);
@@ -485,7 +533,7 @@ function updateScore() {
         if(score.best < score.num){
             score.best = score.num;
         }
-        score.self.setText('BestScore: ' + score.best + '\nScore: ' + score.num);
+        score.self.setText('Score: ' + score.num);
     }
     else {
         score.num = 0;
