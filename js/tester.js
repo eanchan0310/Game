@@ -15,7 +15,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
     audio: {
@@ -33,9 +33,9 @@ var player;
 var dead_chicken;
 var FireList = [];
 var tweenN = [];
-var rankBlock = undefined;
 
 var retry_on = false;
+var retry_on_2 = false;
 var retry_picture;
 var background_1;
 var start;
@@ -76,11 +76,6 @@ score.toggle = false;
 score.best = [0, 0, 0];
 score.bestTxt = [];
 
-var timer = {};
-timer.num = 500;
-timer.gap = 2
-timer.toggle = false;
-
 var Touch_stick_x = 0;
 var Touch_stick_y = 0;
 
@@ -88,21 +83,8 @@ var levelTexture = [];
 
 var test_music = undefined;
 
-// class SndManager {
-//     constructor() {
-
-//     }
-//     classPreload(_scene) {
-//         _scene.load.audio('theme', './assets/audio/G_major_test');
-
-
-//     }
-
-
-
-
-// }
-// var tmpSM = new SndManager();
+var rank_block = [];
+var rank_cont = [];
 // <!전역 변수 선언>
 
 // <preload>
@@ -112,42 +94,40 @@ function preload(){
     this.load.image('deadChicken', './assets/image/jin_deadChicken.png')
     this.load.image('background', './assets/image/jin_Grill_1.png');
     this.load.image('retry_picture', './assets/image/retry_picture.png');
+    this.load.image('rank_block', './assets/image/rank_block.png')
 
     this.load.audio('theme', './assets/audio/start_ting.wav');
+    this.load.audio('ghost', './assets/audio/ghost_song.mp3');
+    this.load.audio('tetris', './assets/audio/tetris_song.mp3');
+    this.load.audio('rank1', './assets/audio/Pickup_coin_rank1.wav');
+    this.load.audio('rank2', './assets/audio/Pickup_coin_rank2.wav');
+    this.load.audio('rank3', './assets/audio/Pickup_coin_rank3.wav');
+
 }
 // <!preload>
 
 // <create>
 function create() 
 {    
-
     // <background, start, retry, score, player, Fire, Gameover 생성>
     test_music = this.sound.add('theme'); 
-
+    ghost_music = this.sound.add('ghost');
+    playing_music = this.sound.add('tetris');
+    rank_music1 = this.sound.add('rank1');
+    rank_music2 = this.sound.add('rank2');
+    rank_music3 = this.sound.add('rank3');
+    
     this.cameras.main.setBackgroundColor('#bbbbbb');
 
     background_1 = this.add.image(0, 0, 'background');
     background_1.setDisplaySize(800, 600);
     background_1.setOrigin(0);
 
-    rankBlock = this.add.graphics();
-
-    var rb_thickness = 4;
-    var rb_color = 0x000000;
-    var rb_alpha = 1
-
-    rankBlock.lineStyle(rb_thickness, rb_color, rb_alpha);
-    rankBlock.fillStyle(0xFFFFFF, 1);
-    rankBlock.fillRect(220, 80, 360, 280);
-    rankBlock.strokeRect(220, 80, 360, 280);
-    rankBlock.setVisible(false);
-    rankBlock.setAlpha(0.7);
-
     start = this.add.text(400, 480, 'press to start', { fontFamily: 'Arial', fontSize: 40, color: 'blue' });
     start.setInteractive();
     start.setOrigin(0.5);
 
-    retry = this.add.text(400, 400, 'R e t r y', { fontFamily: 'Arial', fonSize: 20, color: 'White' });
+    retry = this.add.text(400, 400, 'R e t r y', { fontFamily: 'Arial', fontSize: 30, color: 'White' });
     retry.setOrigin(0.5);
     retry.setVisible(false);
     retry.setInteractive();
@@ -158,22 +138,42 @@ function create()
     retry_picture.setDisplaySize(800, 600)
     retry_picture.setOrigin(0);
 
+    rank_block[0] = this.add.image(0, 0, 'rank_block');
+    rank_block[1] = this.add.image(0, 0, 'rank_block');
+    rank_block[2] = this.add.image(0, 0, 'rank_block');
+    rank_block[0].setDisplaySize(400*2, 70*2);
+    rank_block[1].setDisplaySize(400*2, 70*2);
+    rank_block[2].setDisplaySize(400*2, 70*2);
+    contWidth = rank_block[0].width;
+    rank_block[0].setOrigin(0.5);
+    rank_block[1].setOrigin(0.5);
+    rank_block[2].setOrigin(0.5);
+
     score.self = this.add.text(400 , 60, 'Score: ' + score.num, { fontFamily: 'Arial', fontSize: 50, color: 'white' });
     score.self.setStroke('#000000', 5);
     score.self.setOrigin(0.5);
     
-    score.bestTxt[0] = this.add.text(240 , 105, 'RANK 1            '   + score.best[0], { fontFamily: 'Arial', fontSize: 40, color: 'gold' });
-    score.bestTxt[1] = this.add.text(240 , 155, 'RANK 2            '   + score.best[1], { fontFamily: 'Arial', fontSize: 40, color: 'silver' });
-    score.bestTxt[2] = this.add.text(240 , 205, 'RANK 3            '   + score.best[2], { fontFamily: 'Arial', fontSize: 40, color: 'brown' });
+    score.bestTxt[0] = this.add.text(0, 0, 'RANK 1         '   + score.best[0], { fontFamily: 'Arial', fontSize: 60, color: 'gold' });
+    score.bestTxt[1] = this.add.text(0, 0, 'RANK 2         '   + score.best[1], { fontFamily: 'Arial', fontSize: 60, color: 'silver' });
+    score.bestTxt[2] = this.add.text(0, 0, 'RANK 3         '   + score.best[2], { fontFamily: 'Arial', fontSize: 60, color: 'brown' });
+    scoreWidth = rank_block[0].width;
     score.bestTxt[0].setStroke('#000000', 3);
     score.bestTxt[1].setStroke('#000000', 3);
     score.bestTxt[2].setStroke('#000000', 3);
+    score.bestTxt[0].setOrigin(0.5);
+    score.bestTxt[1].setOrigin(0.5);
+    score.bestTxt[2].setOrigin(0.5);
 
-    // timer.self = this.add.text(400 , 40, 'Time: ' + timer.num, { fontFamily: 'Arial', fontSize: 30, color: 'gray' });
-    // timer.self.setStroke('#000000', 5);
-    // timer.self.setOrigin(0.5);
-    // timer.self.setVisible(false);
-    
+    for(var i=0; i<3; i++){
+        rank_cont[i] = this.add.container(0, 70 + 80 * (i+1));
+        rank_cont[i].add(rank_block[i]);
+        rank_cont[i].add(score.bestTxt[i]);
+        rank_cont[i].setScale(0.5);
+    }
+
+    init_cont_x.call(this);
+    init_cont_y();
+
     levelTexture[0] = this.add.text(400, 40, 'Level' + 1, { fontFamily: 'Arial', fontSize: 30, color: 'black' });
     levelTexture[0].setVisible(false);
     levelTexture[1] = this.add.text(400, 40, 'Level' + 2, { fontFamily: 'Arial', fontSize: 30, color: 'black' });
@@ -203,12 +203,13 @@ function create()
     GameOver = this.add.text(400, 300, 'GameOver', { fontFamily: 'Arial', fontSize: 100, color: 'yellow' });
     GameOver.setOrigin(0.5);
     GameOver.setVisible(false);
-    // <!background, start, retry, score, timer, player, Fire, Gameover 생성>
+    // <!background, start, retry, score, player, Fire, Gameover 생성>
 
     // <Press to start 첫 시작 이벤트>
     this.input.once('pointerdown', (pointer) => {
-        console.log('once');
-        test_music.play();
+        // console.log('once');
+        playing_music.setLoop(true);
+        playing_music.play();
         start.setVisible(false);
         player.setInteractive();
         this.input.setDraggable(player);
@@ -225,90 +226,15 @@ function create()
         }, delay)
     });
     // <!Press to start 첫 시작 이벤트>
-    
-    // <Level나눅이>
-
-    // this.input.once('pointerdown', (pointer) => {
-    //     console.log('once');
-    //     // test_music.play();
-    //     switch (tmpLM.self) {
-    //         case 1:
-    //             start.setVisible(false);
-    //             player.setInteractive();
-    //             this.input.setDraggable(player);
-    //             levelTexture[0].setVisible(true);
-    //             init_player(true);
-    //             setTimeout( () => {
-    //                 scoreToggleBoolean(false);
-    //                 init_Fire(true);
-    //                 for(i=0; i<2; i++){
-    //                     tween_LR.call(this, FireList[i], i, tmpLM.level._twdur);
-    //                 }
-    //                 for(i=3; i<6; i++){
-    //                     tween_UD.call(this, FireList[i], i, tmpLM.level._twdur);
-    //                 }
-    //             }, delay)
-    
-    //             setTimeout( () => {
-    //                 tmpLM.self = 2
-    //                 init_player(false);
-    //                 levelTexture[1].setVisible(false);
-    //                 break;
-    //             }, 50000)
-    
-    //         case 2:
-    //             setTimeout( () => {
-    //                 init_player(true);
-    //                 init_Fire(true);
-    //                 for(i=0; i<5; i++){
-    //                     tween_LR.call(this, FireList[i], i, tmpLM.level._twdur);
-    //                 }
-    //                 for(i=5; i<10; i++){
-    //                     tween_UD.call(this, FireList[i], i, tmpLM.level._twdur);
-    //                 }
-    //                 levelTexture[1].setVisible(true);
-    //             }, delay)
-    
-    //             setTimeout( () => {
-    //                 tmpLM.self = 3
-    //                 levelTexture[1].setVisible(false);
-    //                 break;
-    //             }, 70000)
-    
-    //         case 3:
-    //             setTimeout( () => {
-    //                 scoreToggleBoolean(true);
-    //                 init_Fire(true);
-    //                 for(i=0; i<5; i++){
-    //                     tween_LR.call(this, FireList[i], i, tmpLM.level._twdur);
-    //                 }
-    //                 for(i=5; i<10; i++){
-    //                     tween_UD.call(this, FireList[i], i, tmpLM.level._twdur);
-    //                 }
-    //             }, delay)
-    
-    //             break;
-    //     }
-    // });
-    
-
-
-
-
-
-
-
-
-
-
-
 
     // <collide 충돌 시 이벤트>
     for(var k=0; k<10; k++){
         var emp = FireList[k];
         this.physics.add.collider(emp, player, () => {
             if(player.visible == true && FireList[1].visible == true){
-                test_music.play();
+                playing_music.stop();
+                ghost_music.setLoop(true);
+                ghost_music.play();
                 init_player(false);
                 init_Fire(false);
                 init_retry_picture(true);
@@ -317,20 +243,31 @@ function create()
                 scoreToggleBoolean(false);
                 dead_chicken.setVisible(true);
                 score.self.setVisible(false);
-                rankBlock.setVisible(true);
 
                 if(score.best[0] < score.num){
+                    score.best[2] = score.best[1];
+                    score.best[1] = score.best[0];
                     score.best[0] = score.num;
-                    score.bestTxt[0].setText('RANK 1            '   + score.best[0]);
+                    score.bestTxt[0].setText('RANK 1         '   + score.best[0]);
+                    score.bestTxt[1].setText('RANK 2         '   + score.best[1]);
+                    score.bestTxt[2].setText('RANK 3         '   + score.best[2]);
+                    
                 }
                 else if(score.best[1] < score.num){
+                    score.best[2] = score.best[1];
                     score.best[1] = score.num;
-                    score.bestTxt[1].setText('RANK 2            '   + score.best[1]);
+                    score.bestTxt[1].setText('RANK 2         '   + score.best[1]);
+                    score.bestTxt[2].setText('RANK 3         '   + score.best[2]);
                 }
                 else if(score.best[2] < score.num){
                     score.best[2] = score.num;
-                    score.bestTxt[2].setText('RANK 3            '   + score.best[2]);
+                    score.bestTxt[2].setText('RANK 3         '   + score.best[2]);
                 }
+
+                tween_cont.call(this, rank_cont[2], 500);
+                tween_cont.call(this, rank_cont[1], 1000);
+                tween_cont.call(this, rank_cont[0], 1500);
+                
 
                 for(var i=0; i<10; i++){
                     if(i<5){
@@ -349,9 +286,10 @@ function create()
     
     // <retry 재시작 이벤트>
     retry_picture.on('pointerdown', () => {
-        if(retry_on == true){
+        if(retry_on == true && retry_on_2){
             when_retry.call(this);
             retry_on = !retry_on;
+            retry_on_2 = !retry_on_2;
         }    
     })
     // <!retry 재시작 이벤트>
@@ -372,14 +310,12 @@ function create()
         }
     });
 
-    PhaserGUIAction(
-		this,
-		{
-			alpha: 0.6, // 0.0 ~ 1.0 (any value, you can change it in GUI)
-			// right: 100, // any value
-			// top: 50 // any value
-		}
-	);
+    // PhaserGUIAction(
+	// 	this,
+	// 	{
+	// 		alpha: 0.6,
+	// 	}
+	// );
 }
 // <!create>
 
@@ -402,7 +338,6 @@ function update()
     }
     // <!벽 통과 방지>
     
-    updateTimer();
     updateScore();
 
 }
@@ -416,48 +351,24 @@ function update()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ㄱㄷ
+function rankTween(target, distance){
+    this.tweens.add({
+        targets: target,
+        x: container.x + distance,
+        duration: 1000,
+        delay: 0,
+        yoyo: false,
+        repeat: 0
+    });
+}
+
 // <Toggles>
 function scoreToggle(){
     score.toggle = !score.toggle;
 }
 function scoreToggleBoolean(_bool) {
     score.toggle = _bool;
-}
-function timerToggle(){
-    timer.toggle = !timer.toggle;
-}
-function timerToggleBoolean(_bool) {
-    timer.toggle = _bool;
 }
 // <!Toggles>
 
@@ -476,42 +387,22 @@ function distanceY(_pointerY) {
     return _pointerY + Touch_stick_y;
 }
 // <!Touch Pad 기능>
-
-// <Press to start 첫 시작 이벤트>
-function start () {
-    this.input.once('pointerdown', (pointer) => {
-        console.log('once');
-        
-        start.setVisible(false);
-        player.setInteractive();
-        this.input.setDraggable(player);
-        init_player(true);
-        setTimeout( () => {
-            scoreToggleBoolean(true);
-            init_Fire(true);
-            for(i=0; i<5; i++){
-                tween_LR.call(this, FireList[i], i);
-            }
-            for(i=5; i<10; i++){
-                tween_UD.call(this, FireList[i], i);
-            }
-        }, delay)
-    });
-};
-// <!Press to start 첫 시작 이벤트>
  
 // <retry 기능>
 function when_retry() {
-    rankBlock.setVisible(false);
-    test_music.play();
+    playing_music.setLoop(true);
+    playing_music.play();
+    ghost_music.stop();
     init_retry_picture(false);
     init_player(true);
     dead_chicken.setVisible(false);
     GameOver.setVisible(false);
     retry.setVisible(false);
-    score.self.setVisible(true)
+    score.self.setVisible(true);
+    init_cont_x.call(this);
+    init_cont_y();
+
     setTimeout( () => {
-        score.self.setText('BestScore: ' + score.best + '\nScore: ' + score.num);
         scoreToggleBoolean(true);
         init_Fire(true);
         for(i=0; i<tweenN.length; i++){
@@ -530,23 +421,10 @@ function when_retry() {
 function updateScore() {
     if (score.toggle) {
         score.num += score.gap;
-        if(score.best < score.num){
-            score.best = score.num;
-        }
         score.self.setText('Score: ' + score.num);
     }
     else {
         score.num = 0;
-        
-    }
-}
-function updateTimer(){
-    if (timer.toggle) {
-        timer.num += timer.gap;
-        timer.self.setText('Time: ' + timer.num);
-    }
-    else {
-        timer.num = 0;
         
     }
 }
@@ -586,7 +464,7 @@ function tween_LR(target, i) {
         },
         onUpdate: () => {
             if(player.visible == false){
-                console.log('remove', i)
+                // console.log('remove', i)
                 tweenN[i].remove();
                 target.x = 0
                 target.y = Random_Int(600, 0);
@@ -617,7 +495,7 @@ function tween_UD(target, i) {
         },
         onUpdate: () => {
             if(player.visible == false){
-                console.log('remove', i)
+                // console.log('remove', i)
                 tweenN[i].remove();
                 target.x = Random_Int(800, 0);
                 target.y = 0;
@@ -634,6 +512,32 @@ function tween_UD(target, i) {
         }
     });
 }
+function tween_cont(target, i) {
+    tweenC = this.tweens.add({
+        targets: target,
+        x: this.sys.scale.width/2,
+        duration: i,
+        ease: 'Bounce.easeIn',
+        yoyo: false,
+        repeat: 0,
+
+        onComplete: () => {
+            if(target == rank_cont[2]){
+                rank_music3.play();
+            }
+            else if(target == rank_cont[1]){
+                rank_music2.play();
+            }
+            else if(target == rank_cont[0]){
+                rank_music1.play();
+            }
+            
+            if(target == rank_cont[0]){
+                retry_on_2 = true;
+            }
+        }
+    })
+}
 // <!tween 기능>
 
 // <Random 기능>
@@ -646,3 +550,20 @@ function Random_Double (max, min){
     return Math.random() * (max - min) + min;
 }
 // <!Random 기능>
+
+function init_cont_x() {
+    rank_cont[0].x = -(contWidth / 2);
+    rank_cont[1].x = this.sys.scale.width + (contWidth / 2);
+    rank_cont[2].x = -(contWidth / 2);
+    // console.log("0 x", rank_cont[0].x)
+    // console.log("1 x", rank_cont[1].x)
+    // console.log("2 x", rank_cont[2].x)
+
+}
+
+function init_cont_y() {
+    rank_cont[0].y = 70;
+    rank_cont[1].y = 150;
+    rank_cont[2].y = 230;
+
+}
